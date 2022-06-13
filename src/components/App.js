@@ -54,6 +54,7 @@ class App extends Component {
     if(tokenData){
       const token = new web3.eth.Contract(Token.abi, tokenData.address)
       this.setState({ token })
+      console.log(token.options.address)
       let tokenBalance = await token.methods.balanceOf(this.state.account).call()
       this.setState({ tokenBalance: tokenBalance.toString()})
     }

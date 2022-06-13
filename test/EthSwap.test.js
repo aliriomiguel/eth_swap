@@ -26,7 +26,7 @@ contract('EthSwap', ([deployer, investor]) => {
     describe('Token deployment', async () => {
         it('token has a name', async () => {
             const name = await token.name()
-            assert.equal(name, 'DApp Token')
+            assert.equal(name, 'Penka Token')
         })
     })
 
