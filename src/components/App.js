@@ -20,12 +20,11 @@ class App extends Component {
     const web3 = window.web3
     
     const accounts = await web3.eth.getAccounts()
-    //console.log(accounts)
     this.setState({account: accounts[0]})
 
     const ethBalance = await web3.eth.getBalance(this.state.account)
-    //console.log(ethBalance)
     this.setState({ethBalance})
+    
     
 
     /* 
@@ -51,15 +50,11 @@ class App extends Component {
 
     //Load Token
     const networkId = await web3.eth.net.getId()
-    //console.log(networkId)
     const tokenData = Token.networks[networkId]
     if(tokenData){
       const token = new web3.eth.Contract(Token.abi, tokenData.address)
       this.setState({ token })
-      //console.log('token contract:')
-      //console.log(token)
       let tokenBalance = await token.methods.balanceOf(this.state.account).call()
-      //console.log('tokenBalance: ', tokenBalance.toString())
       this.setState({ tokenBalance: tokenBalance.toString()})
     }
     else{
@@ -73,9 +68,8 @@ class App extends Component {
       this.setState({ ethSwap })
     }
     else{
-      window.alert('Token contract not deployed to detected network')
+      window.alert('EthSwap contract not deployed to detected network')
     }
-    //console.log(this.state.ethSwap)
   } 
 
   async loadWeb3(){
@@ -91,6 +85,23 @@ class App extends Component {
     }
 
     this.setState({loading: false})
+  }
+
+  buyTokens = (etherAmount) => {
+    this.setState({loading: true})
+    this.state.ethSwap.methods.buyTokens()
+                              .send({value: etherAmount, from: this.state.account})
+                              .on('transactionHash',(hash) => {this.setState({loading: false})})
+  }
+  
+  sellTokens = (tokenAmount) => {
+    this.setState({loading: true})
+    console.log('address', this.state.ethSwap.options.address)
+    this.state.token.methods.approve(this.state.ethSwap.options.address, tokenAmount).send({ from: this.state.account }).on('transactionHash', (hash) => {
+      this.state.ethSwap.methods.sellTokens(tokenAmount).send({ from: this.state.account }).on('transactionHash', (hash) => {
+        this.setState({ loading: false })
+      })
+    })                             
   }
 
   constructor(props){
@@ -111,7 +122,12 @@ class App extends Component {
       content = <p id = "loader" className="text-center">Loading...</p>
     }
     else{
-      content = <Main/>
+      content = <Main 
+      ethBalance = {this.state.ethBalance} 
+      tokenBalance = {this.state.tokenBalance}
+      buyTokens={this.buyTokens}
+      sellTokens={this.sellTokens}
+      />
     }
     return (
       <div>
